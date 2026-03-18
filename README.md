@@ -4,6 +4,12 @@ A web-based application designed for ACLC College of Tacloban that helps student
 
 ---
 
+## 🎯 Purpose
+
+The purpose of ACLCStock is to streamline the monitoring and management of school merchandise stock, providing students with timely updates on availability and allowing administrators to efficiently manage inventory, reservations, and restocking schedules. This system aims to improve accessibility, reduce manual stock checking, and enhance overall convenience for both students and staff.
+
+---
+
 ## ✨ Features
 
 - Real-time stock availability for school merchandise  
