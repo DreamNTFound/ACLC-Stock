@@ -12,7 +12,6 @@ import Skeleton from "@mui/material/Skeleton";
 import { formatCurrency } from "../utils/formatCurrency";
 import { categoryOptions } from "../utils/formatHelpers";
 import { seedMerchandise } from "../services/seedData"; // Temporary seed data
-import Swal from "sweetalert2";
 
 export default function Merchandise() {
   const menuRef = useRef(null);
