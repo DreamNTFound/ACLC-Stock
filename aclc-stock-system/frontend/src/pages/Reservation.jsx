@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { getReservations } from "../services/reservationService";
 import { seedReservations } from "../services/seedData";
-import { reserveStatusOptions } from "../utils/formatHelpers";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
