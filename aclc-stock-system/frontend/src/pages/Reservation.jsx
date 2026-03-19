@@ -59,8 +59,8 @@ export default function Reservation() {
                             <span>
                               Created:{" "}
                               {new Date(
-                                reservation.createdAt,
-                              ).toLocaleDateString()}
+                                reservation.created_at,
+                              ).toLocaleDateString() || "N/A"}
                             </span>
                           </div>
                           <p className="text-xs text-slate-400 mt-1">
