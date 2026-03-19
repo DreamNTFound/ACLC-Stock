@@ -184,8 +184,8 @@ export default function Reservation() {
                               <td className="p-2 align-middle">
                                 <div className="font-medium text-[#1e3a5f] text-sm">
                                   {new Date(
-                                    reservation.createdAt,
-                                  ).toLocaleDateString()}
+                                    reservation.created_at,
+                                  ).toLocaleDateString() || "N/A"}
                                 </div>
                               </td>
                               <td className="p-2 align-middle">
