@@ -318,7 +318,10 @@ export default function AdminDashboard() {
                         </svg>
                         <span>Recent Reservations</span>
                       </div>
-                      <NavLink className="text-sm text-[#d4a843] hover:underline flex items-center gap-1">
+                      <NavLink
+                        to={"/reservations"}
+                        className="text-sm text-[#d4a843] hover:underline flex items-center gap-1"
+                      >
                         <span>View all</span>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
