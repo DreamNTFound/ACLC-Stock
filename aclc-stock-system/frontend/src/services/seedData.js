@@ -73,7 +73,7 @@ export const seedReservations = () => {
           created_at: "01-06-2025",
           status: "Pending",
           paymentMethod: "GCash",
-          gcash_ref: "GCASH123456",
+          gcashRef: "GCASH123456",
         },
         {
           id: 2,
@@ -85,7 +85,7 @@ export const seedReservations = () => {
           created_at: "06-12-2025",
           status: "Pending",
           paymentMethod: "GCash",
-          gcash_ref: "GCASH123456",
+          gcashRef: "GCASH123456",
         },
         {
           id: 3,
@@ -97,7 +97,7 @@ export const seedReservations = () => {
           created_at: "04-25-2025",
           status: "Pending",
           paymentMethod: "GCash",
-          gcash_ref: "GCASH123456",
+          gcashRef: "GCASH123456",
         },
       ]),
     );
