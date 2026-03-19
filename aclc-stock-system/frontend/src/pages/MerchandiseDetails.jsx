@@ -107,6 +107,7 @@ export default function MerchandiseDetails() {
         status: "Pending",
         paymentMethod: "GCash",
         gcashRef: paymentResult.transactionId,
+        created_at: new Date().toISOString(),
       });
       Swal.fire({
         icon: "success",
