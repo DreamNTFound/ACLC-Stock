@@ -98,7 +98,7 @@ export default function Navbar() {
               </svg>
             </button>
           )}
-          <div className="relative w-full md:w-auto">
+          <div className="relative w-full md:w-auto md:hidden">
             <div
               className={`md:hidden absolute top-5 -left-5 w-full bg-slate-800 text-white px-4 pt-4 pb-4 overflow-hidden transition-all duration-300 ${
                 mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
