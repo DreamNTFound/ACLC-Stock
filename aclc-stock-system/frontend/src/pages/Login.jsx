@@ -15,6 +15,12 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(!!authService.getRememberMe());
   const [resetPassword, setResetPassword] = useState(false);
 
+  const handleForgotPassword = () => {
+    setPassword("");
+    setConfirmPassword("");
+    setResetPassword(true);
+  };
+
   const handleLogin = async () => {
     try {
       setLoginError("");
@@ -66,6 +72,8 @@ export default function Login() {
       navigate("/admin-dashboard");
     } else if (user?.role === "student") {
       navigate("/");
+    } else {
+      navigate("/login");
     }
   }, [navigate]);
 
@@ -144,7 +152,7 @@ export default function Login() {
                     Password
                   </label>
                   <button
-                    onClick={() => setResetPassword(!resetPassword)}
+                    onClick={handleForgotPassword}
                     className="text-xs text-[#d4a843] hover:text-[#c49a3a] font-medium transition-colors"
                   >
                     Forgot password?
