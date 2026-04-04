@@ -1,8 +1,8 @@
 const users = [
   {
     id: 1,
-    usn: "12345678",
-    password: "12345678",
+    usn: "admin",
+    password: "admin123",
     name: "Admin",
     email: "admin@aclc.edu.ph",
     role: "admin",
