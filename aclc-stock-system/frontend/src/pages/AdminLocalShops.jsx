@@ -11,6 +11,7 @@ import Modal from "../components/common/Modal";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { seedLocalShop } from "../services/seedData";
+import Skeleton from "@mui/material/Skeleton";
 
 export default function LocalShops() {
   const menuRef = useRef(null);
@@ -22,13 +23,17 @@ export default function LocalShops() {
   const [selectedShopId, setSelectedShopId] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 }); // for context menu
   const [openMenuId, setOpenMenuId] = useState(null); // for context menu
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     seedLocalShop();
     const fetchShops = async () => {
       try {
         const response = await getLocalShop();
-        setShops(response);
+        setTimeout(() => {
+          setShops(response);
+          setLoading(false);
+        }, 500);
       } catch (error) {
         console.error("Error fetching local shops:", error);
       }
@@ -196,73 +201,94 @@ export default function LocalShops() {
                           </tr>
                         </thead>
                         <tbody className="[&_tr:last-child]:border-0">
-                          {shops.map((shop) => (
-                            <tr
-                              key={shop.id}
-                              className="opacity-0 animate-fadeIn"
-                            >
-                              <td className="p-2 align-middle">{shop.name}</td>
-                              <td className="p-2 align-middle">
-                                {shop.address}
-                              </td>
-                              <td className="p-2 align-middle">
-                                {shop.contact}
-                              </td>
-                              <td className="p-2 align-middle">
-                                <div className="flex flex-wrap gap-1">
-                                  {getShopItemsPrev(shop).map((item, i) => (
-                                    <div
-                                      key={i}
-                                      className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors border-transparent bg-slate-100 text-secondary-foreground text-[10px]"
-                                    >
-                                      {item}
-                                    </div>
-                                  ))}
-                                </div>
-                              </td>
-                              <td className="p-2 align-middle">
-                                {shop.partner && (
-                                  <span className="text-yellow-400 text-xl">
-                                    ★
-                                  </span>
-                                )}
-                              </td>
-                              <td className="p-2 align-middle">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const rect =
-                                      e.currentTarget.getBoundingClientRect();
-                                    const menuWidth = 128;
-                                    setMenuPosition({
-                                      top: rect.bottom + 6,
-                                      left: rect.right - menuWidth,
-                                    });
-                                    setOpenMenuId((prevId) =>
-                                      prevId === shop.id ? null : shop.id,
-                                    );
-                                  }}
-                                  className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
+                          {loading
+                            ? Array.from({ length: 8 }).map((_, idx) => (
+                                <tr
+                                  key={idx}
+                                  className="border-b transition-colors animated-pulse"
                                 >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.5}
-                                    stroke="currentColor"
-                                    className="size-6 text-slate-500"
+                                  <td
+                                    colSpan={6}
+                                    className="p-1 align-middle font-medium text-[#1e3a5f]"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+                                    <Skeleton
+                                      variant="rectangular"
+                                      width="100%"
+                                      height={50}
+                                      className="rounded-md"
                                     />
-                                  </svg>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                                  </td>
+                                </tr>
+                              ))
+                            : shops.map((shop) => (
+                                <tr
+                                  key={shop.id}
+                                  className="opacity-0 animate-fadeIn"
+                                >
+                                  <td className="p-2 align-middle">
+                                    {shop.name}
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    {shop.address}
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    {shop.contact}
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    <div className="flex flex-wrap gap-1">
+                                      {getShopItemsPrev(shop).map((item, i) => (
+                                        <div
+                                          key={i}
+                                          className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors border-transparent bg-slate-100 text-secondary-foreground text-[10px]"
+                                        >
+                                          {item}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    {shop.partner && (
+                                      <span className="text-yellow-400 text-xl">
+                                        ★
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const rect =
+                                          e.currentTarget.getBoundingClientRect();
+                                        const menuWidth = 128;
+                                        setMenuPosition({
+                                          top: rect.bottom + 6,
+                                          left: rect.right - menuWidth,
+                                        });
+                                        setOpenMenuId((prevId) =>
+                                          prevId === shop.id ? null : shop.id,
+                                        );
+                                      }}
+                                      className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
+                                    >
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="size-6 text-slate-500"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
                         </tbody>
                       </table>
                     </div>

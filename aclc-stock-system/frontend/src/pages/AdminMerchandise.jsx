@@ -290,14 +290,14 @@ export default function Merchandise() {
                         </thead>
                         <tbody className="[&_tr:last-child]:border-0">
                           {loading
-                            ? Array.from({ length: 5 }).map((_, idx) => (
+                            ? Array.from({ length: 8 }).map((_, idx) => (
                                 <tr key={idx}>
-                                  <td colSpan={7} className="p-1">
+                                  <td colSpan={7} className="p-1 align-middle font-medium text-[#1e3a5f]">
                                     <Skeleton
-                                      variant="rectangle"
+                                      variant="rectangular"
                                       width="100%"
                                       height={50}
-                                      className="rounded-lg"
+                                      className="rounded-md"
                                     />
                                   </td>
                                 </tr>

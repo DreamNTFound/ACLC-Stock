@@ -14,6 +14,7 @@ import Footer from "../components/Footer";
 import Modal from "../components/common/Modal";
 import { getItems } from "../services/merchandiseService";
 import { seedSchedule } from "../services/seedData"; // Temporary seed data
+import Skeleton from "@mui/material/Skeleton";
 
 export default function RestockSchedule() {
   const menuRef = useRef(null);
@@ -28,6 +29,7 @@ export default function RestockSchedule() {
   const [openSelectStatus, setOpenSelectStatus] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 }); // for context menu
   const [openMenuId, setOpenMenuId] = useState(null); // for context menu
+  const [loading, setLoading] = useState(true);
 
   const options = ["Scheduled", "Delayed", "Completed", "Cancelled"];
   const statusStyles = {
@@ -45,6 +47,7 @@ export default function RestockSchedule() {
       setTimeout(() => {
         setRestockSched(sched);
         setItems(items);
+        setLoading(false);
       }, 500);
     };
     fetchRestockSchedule();
@@ -218,74 +221,93 @@ export default function RestockSchedule() {
                           </tr>
                         </thead>
                         <tbody className="[&_tr:last-child]:border-0">
-                          {restockSched?.map((sched) => (
-                            <tr
-                              key={sched.id}
-                              className="border-b transition-colors "
-                            >
-                              <td className="p-2 align-middle font-medium text-[#1e3a5f]">
-                                <div className="flex items-center gap-3">
-                                  <span className="font-medium text-[#1e3a5f]">
-                                    {sched.merchandise_item?.name || ""}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="p-2 align-middle text-sm">
-                                {dayjs(sched.expected_date).format(
-                                  "MMM D, YYYY",
-                                ) || "N/A"}
-                              </td>
-                              <td className="p-2 align-middle">
-                                {sched.expected_quantity}
-                              </td>
-                              <td className="p-2 align-middle">
-                                <div
-                                  className={`inline-flex items-center rounded-md px-2.5 py-0.5 font-semibold transition-color border-transparent shadow border text-xs ${
-                                    statusStyles[sched.status] || ""
-                                  }`}
+                          {loading
+                            ? Array.from({ length: 8 }).map((_, idx) => (
+                                <tr
+                                  key={idx}
+                                  className="border-b transition-colors animated-pulse"
                                 >
-                                  {sched.status || "N/A"}
-                                </div>
-                              </td>
-                              <td className="p-2 align-middle text-sm text-slate-500 max-w-48">
-                                {sched.notes || "N/A"}
-                              </td>
-                              <td className="p-2 align-middle">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const rect =
-                                      e.currentTarget.getBoundingClientRect();
-                                    const menuWidth = 128;
-                                    setMenuPosition({
-                                      top: rect.bottom + 6,
-                                      left: rect.right - menuWidth,
-                                    });
-                                    setOpenMenuId((prevId) =>
-                                      prevId === sched.id ? null : sched.id,
-                                    );
-                                  }}
-                                  className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.5}
-                                    stroke="currentColor"
-                                    className="size-6 text-slate-500"
+                                  <td
+                                    colSpan={6}
+                                    className="p-1 align-middle font-medium text-[#1e3a5f]"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+                                    <Skeleton
+                                      variant="rectangular"
+                                      width="100%"
+                                      height={50}
+                                      className="rounded-md"
                                     />
-                                  </svg>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                                  </td>
+                                </tr>
+                              ))
+                            : restockSched?.map((sched) => (
+                                <tr
+                                  key={sched.id}
+                                  className="border-b transition-colors animate-fadeIn"
+                                >
+                                  <td className="p-2 align-middle font-medium text-[#1e3a5f]">
+                                    <div className="flex items-center gap-3">
+                                      <span className="font-medium text-[#1e3a5f]">
+                                        {sched.merchandise_item?.name || ""}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="p-2 align-middle text-sm">
+                                    {dayjs(sched.expected_date).format(
+                                      "MMM D, YYYY",
+                                    ) || "N/A"}
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    {sched.expected_quantity}
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    <div
+                                      className={`inline-flex items-center rounded-md px-2.5 py-0.5 font-semibold transition-color border-transparent shadow border text-xs ${
+                                        statusStyles[sched.status] || ""
+                                      }`}
+                                    >
+                                      {sched.status || "N/A"}
+                                    </div>
+                                  </td>
+                                  <td className="p-2 align-middle text-sm text-slate-500 max-w-48">
+                                    {sched.notes || "N/A"}
+                                  </td>
+                                  <td className="p-2 align-middle">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const rect =
+                                          e.currentTarget.getBoundingClientRect();
+                                        const menuWidth = 128;
+                                        setMenuPosition({
+                                          top: rect.bottom + 6,
+                                          left: rect.right - menuWidth,
+                                        });
+                                        setOpenMenuId((prevId) =>
+                                          prevId === sched.id ? null : sched.id,
+                                        );
+                                      }}
+                                      className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
+                                    >
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="size-6 text-slate-500"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
                         </tbody>
                       </table>
                     </div>
