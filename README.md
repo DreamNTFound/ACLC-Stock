@@ -34,7 +34,6 @@ The purpose of ACLCStock is to streamline the monitoring and management of schoo
 - REST API  
 
 ---
-
 ## 📁 Project Structure
 
 - `/frontend` – React app handling the user interface  
