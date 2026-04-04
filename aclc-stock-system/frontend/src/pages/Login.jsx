@@ -2,14 +2,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import Swal from "sweetalert2";
+import Modal from "../components/common/Modal";
 
 export default function Login() {
   const navigate = useNavigate();
   const [usn, setUsn] = useState(authService.getRememberMe() || "");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [rememberMe, setRememberMe] = useState(!!authService.getRememberMe());
+  const [resetPassword, setResetPassword] = useState(false);
 
   const handleLogin = async () => {
     try {
@@ -139,7 +143,10 @@ export default function Login() {
                   <label className="text-sm leading-none text-slate-700 font-medium">
                     Password
                   </label>
-                  <button className="text-xs text-[#d4a843] hover:text-[#c49a3a] font-medium transition-colors">
+                  <button
+                    onClick={() => setResetPassword(!resetPassword)}
+                    className="text-xs text-[#d4a843] hover:text-[#c49a3a] font-medium transition-colors"
+                  >
                     Forgot password?
                   </button>
                 </div>
@@ -229,6 +236,7 @@ export default function Login() {
                 </label>
               </div>
               <button
+                type="button"
                 onClick={handleLogin}
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm hover:bg-primary/90 px-4 py-2 w-full h-12 bg-gradient-to-r from-[#1e3a5f] to-[#2a4d7a] hover:from-[#2a4d7a] hover:to-[#1e3a5f] text-white font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
               >
@@ -246,6 +254,185 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={resetPassword}
+        onClose={() => setResetPassword(false)}
+        title="Change Password"
+        children={
+          <>
+            <div className="space-y-2 py-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm leading-none text-slate-700 font-medium">
+                  Password
+                </label>
+              </div>
+              <div className="relative group">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                  />
+                </svg>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setLoginError("");
+                  }}
+                  className={`flex w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors md:text-sm pl-11 h-12 border-slate-200
+                      ${
+                        loginError
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-slate-200 focus:border-[#1e3a5f]"
+                      }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2 py-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm leading-none text-slate-700 font-medium">
+                  Confirm Password
+                </label>
+              </div>
+              <div className="relative group">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                  />
+                </svg>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setLoginError("");
+                  }}
+                  className={`flex w-full rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors md:text-sm pl-11 h-12 border-slate-200
+                      ${
+                        loginError
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-slate-200 focus:border-[#1e3a5f]"
+                      }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-4 py-4">
+              <button
+                type="button"
+                onClick={handleLogin}
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm hover:bg-primary/90 px-4 py-2 w-full h-12 bg-gradient-to-r from-[#1e3a5f] to-[#2a4d7a] hover:from-[#2a4d7a] hover:to-[#1e3a5f] text-white font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
+              >
+                Reset Password
+              </button>
+            </div>
+          </>
+        }
+      />
     </>
   );
 }
