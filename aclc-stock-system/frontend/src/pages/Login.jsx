@@ -258,6 +258,11 @@ export default function Login() {
                   email support@aclc.edu.ph
                 </p>
               </div>
+              <div className="pt-2 border-t border-slate-100">
+                <p className="text-xs text-slate-600">
+                  Demo credentials: admin / admin123
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -266,7 +271,7 @@ export default function Login() {
       <Modal
         isOpen={resetPassword}
         onClose={() => setResetPassword(false)}
-        title="Change Password"
+        title="Forgot Password"
         children={
           <>
             <div className="space-y-2 py-4">
