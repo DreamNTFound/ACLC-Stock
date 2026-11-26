@@ -347,7 +347,7 @@ export default function AdminDashboard() {
                               <div className="flex items-center gap-3 justify-center">
                                 {item?.item_images?.[0] ? (
                                   <img
-                                    src={`http://localhost:5000/uploads/${item?.item_images?.[0]}`}
+                                    src={`${import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")}/uploads/${item?.item_images?.[0]}`}
                                     alt="Preview"
                                     className="w-8 h-8 object-cover rounded-lg"
                                   />
