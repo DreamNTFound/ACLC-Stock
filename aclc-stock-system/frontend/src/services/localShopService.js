@@ -1,10 +1,12 @@
 import { api } from "./api";
 import { secureFetch } from "./authService";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export const recommendedShopService = {
   getRecommendedShop: () =>
     api(() =>
-      secureFetch("http://localhost:5000/api/local-shops", {
+      secureFetch(`${API_URL}/api/local-shops`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -15,7 +17,7 @@ export const recommendedShopService = {
 
   addLocalShop: (shop) =>
     api(() => {
-      return secureFetch("http://localhost:5000/api/local-shops", {
+      return secureFetch(`${API_URL}/api/local-shops`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -27,7 +29,7 @@ export const recommendedShopService = {
 
   updateLocalShop: (id, updatedData) =>
     api(() => {
-      return secureFetch(`http://localhost:5000/api/local-shops/${id}`, {
+      return secureFetch(`${API_URL}/api/local-shops/${id}`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -39,7 +41,7 @@ export const recommendedShopService = {
 
   deleteLocalShop: (id) =>
     api(() => {
-      return secureFetch(`http://localhost:5000/api/local-shops/${id}`, {
+      return secureFetch(`${API_URL}/api/local-shops/${id}`, {
         method: "DELETE",
         credentials: "include",
         headers: {

@@ -1,10 +1,12 @@
 import { api } from "./api";
 import { secureFetch } from "./authService";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export const reservationService = {
   getAllReservation: () => {
     return api(() =>
-      secureFetch("http://localhost:5000/api/reservations", {
+      secureFetch(`${API_URL}/api/reservations`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -16,7 +18,7 @@ export const reservationService = {
 
   getMyReservation: async (profileId) => {
     return api(() =>
-      secureFetch(`http://localhost:5000/api/reservations/user/${profileId}`, {
+      secureFetch(`${API_URL}/api/reservations/user/${profileId}`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -28,7 +30,7 @@ export const reservationService = {
 
   addReservation: (reservation) =>
     api(() => {
-      return secureFetch("http://localhost:5000/api/reservations", {
+      return secureFetch(`${API_URL}/api/reservations`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -40,23 +42,20 @@ export const reservationService = {
 
   updateReservation: (reservationId, updatedData) =>
     api(() => {
-      return secureFetch(
-        `http://localhost:5000/api/reservations/${reservationId}`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedData),
+      return secureFetch(`${API_URL}/api/reservations/${reservationId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(updatedData),
+      });
     }),
 
   cancelReservation: (reservationId) =>
     api(() => {
       return secureFetch(
-        `http://localhost:5000/api/reservations/${reservationId}/cancel`,
+        `${API_URL}/api/reservations/${reservationId}/cancel`,
         {
           method: "PATCH",
           credentials: "include",
