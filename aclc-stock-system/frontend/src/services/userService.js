@@ -28,37 +28,3 @@ export const userService = {
       }),
     ),
 };
-
-// import { api } from "./api";
-
-// export const userService = {
-//   getProfile: async () => {
-//     try {
-//       const profile = await api(() =>
-//         fetch("http://localhost:5000/api/profiles", {
-//           method: "GET",
-//           credentials: "include",
-//           headers: {
-//             "Content-Type": "application/json",
-//           },
-//         }),
-//       );
-//       return profile;
-//     } catch (error) {
-//       console.error("Error fetching profile:", error);
-//       return null;
-//     }
-//   },
-
-//   getUserById: (id) => {
-//     api(() =>
-//       fetch(`http://localhost:5000/api/profiles/${id}`, {
-//         method: "GET",
-//         credentials: "include",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//       }),
-//     );
-//   },
-// };
