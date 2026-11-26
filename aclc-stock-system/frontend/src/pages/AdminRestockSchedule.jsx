@@ -3,17 +3,12 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-import {
-  getSched,
-  addSched,
-  updateSched,
-  deleteSched,
-} from "../services/restockService";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import Modal from "../components/common/Modal";
-import { getItems } from "../services/merchandiseService";
-import { seedSchedule } from "../services/seedData"; // Temporary seed data
+import { restockScheduleService } from "@/services/restockService";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import Modal from "@/components/common/Modal";
+import { productService } from "@/services/merchandiseService";
+import { seedSchedule } from "@/services/seedData"; // Temporary seed data
 import Skeleton from "@mui/material/Skeleton";
 
 export default function RestockSchedule() {
@@ -42,13 +37,20 @@ export default function RestockSchedule() {
   useEffect(() => {
     seedSchedule();
     const fetchRestockSchedule = async () => {
-      const sched = await getSched();
-      const items = await getItems();
-      setTimeout(() => {
+      try {
+        setLoading(true);
+        const sched = await restockScheduleService.getAllRestockSchedules();
+        const items = await productService.getAllProduct();
         setRestockSched(sched);
         setItems(items);
+      } catch (error) {
+        console.error("Error fetching restock schedule:", error);
+        setRestockSched([]);
+        setItems([]);
         setLoading(false);
-      }, 500);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchRestockSchedule();
 
@@ -61,14 +63,15 @@ export default function RestockSchedule() {
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [menuRef]);
+  }, []);
 
   const getRestockSchedule = {
-    merchandise_item: "",
-    expected_date: "",
-    expected_quantity: 0,
+    productId: "",
+    item_name: "",
+    restockDate: "",
+    quantity: 0,
     status: "",
-    notes: "",
+    note: "",
   };
   const [restockForm, setRestockForm] = useState(getRestockSchedule);
   const resetForm = () => {
@@ -83,7 +86,7 @@ export default function RestockSchedule() {
   };
 
   const handleEditSchedule = (id) => {
-    const schedToEdit = restockSched.find((sched) => sched.id === id);
+    const schedToEdit = restockSched.find((sched) => sched._id === id);
     if (!schedToEdit) return;
 
     setMode("edit");
@@ -102,9 +105,11 @@ export default function RestockSchedule() {
   const confirmDeleteSched = async () => {
     if (!selectedRestockSchedId) return;
     try {
-      await deleteSched(selectedRestockSchedId);
+      await restockScheduleService.deleteRestockSchedule(
+        selectedRestockSchedId,
+      );
       setRestockSched((prev) =>
-        prev.filter((sched) => sched.id !== selectedRestockSchedId),
+        prev.filter((sched) => sched._id !== selectedRestockSchedId),
       );
       setTimeout(() => {
         setIsDelRestockSchedModalOpen(false);
@@ -116,23 +121,23 @@ export default function RestockSchedule() {
     }
   };
 
-  const savedRestockSchedule = async (e) => {
+  const saved = async (e) => {
     e.preventDefault();
     try {
       if (mode === "edit") {
-        const updatedSchedule = await updateSched(
-          selectedRestockSchedId,
-          restockForm,
-        );
+        const updatedSchedule =
+          await restockScheduleService.updateRestockSchedule(
+            selectedRestockSchedId,
+            restockForm,
+          );
         setRestockSched((prev) =>
           prev.map((sched) =>
-            sched.id === selectedRestockSchedId
-              ? updatedSchedule
-              : restockSched,
+            sched._id === selectedRestockSchedId ? updatedSchedule : sched,
           ),
         );
       } else {
-        const newSchedule = await addSched(restockForm);
+        const newSchedule =
+          await restockScheduleService.createRestockSchedule(restockForm);
         setRestockSched((prev) => [...prev, newSchedule]);
       }
       setTimeout(() => {
@@ -151,8 +156,6 @@ export default function RestockSchedule() {
     }));
     setOpenSelectStatus(false);
   };
-
-  console.log("Restock Schedule:", restockSched);
 
   return (
     <>
@@ -197,7 +200,7 @@ export default function RestockSchedule() {
               </div>
               <div className="rounded-xl border bg-card text-card-foreground shadow">
                 <div className="p-0">
-                  <div className="overflow-x-a">
+                  <div className="overflow-x-auto">
                     <div className="relative w-full overflow-auto">
                       <table className="w-full caption-bottom text-sm">
                         <thead className="[&_tr]:border-b">
@@ -221,93 +224,117 @@ export default function RestockSchedule() {
                           </tr>
                         </thead>
                         <tbody className="[&_tr:last-child]:border-0">
-                          {loading
-                            ? Array.from({ length: 8 }).map((_, idx) => (
-                                <tr
-                                  key={idx}
-                                  className="border-b transition-colors animated-pulse"
+                          {loading ? (
+                            Array.from({ length: 8 }).map((_, idx) => (
+                              <tr
+                                key={idx}
+                                className="border-b transition-colors animated-pulse"
+                              >
+                                <td
+                                  colSpan={6}
+                                  className="p-1 align-middle font-medium text-[#1e3a5f]"
                                 >
-                                  <td
-                                    colSpan={6}
-                                    className="p-1 align-middle font-medium text-[#1e3a5f]"
+                                  <Skeleton
+                                    variant="rectangular"
+                                    width="100%"
+                                    height={50}
+                                    className="rounded-md"
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : restockSched?.length > 0 ? (
+                            restockSched?.map((sched) => (
+                              <tr
+                                key={sched._id}
+                                className="border-b transition-colors animate-fadeIn"
+                              >
+                                <td className="p-2 align-middle font-medium text-[#1e3a5f]">
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-medium text-[#1e3a5f]">
+                                      {sched.productId?.item_name || "N/A"}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="p-2 align-middle text-sm">
+                                  {dayjs(sched.restockDate).format(
+                                    "MMM D, YYYY",
+                                  ) || "N/A"}
+                                </td>
+                                <td className="p-2 align-middle">
+                                  {sched.quantity}
+                                </td>
+                                <td className="p-2 align-middle">
+                                  <div
+                                    className={`inline-flex items-center rounded-md px-2.5 py-0.5 font-semibold transition-color border-transparent shadow border text-xs ${
+                                      statusStyles[sched.status] || "N/A"
+                                    }`}
                                   >
-                                    <Skeleton
-                                      variant="rectangular"
-                                      width="100%"
-                                      height={50}
-                                      className="rounded-md"
-                                    />
-                                  </td>
-                                </tr>
-                              ))
-                            : restockSched?.map((sched) => (
-                                <tr
-                                  key={sched.id}
-                                  className="border-b transition-colors animate-fadeIn"
-                                >
-                                  <td className="p-2 align-middle font-medium text-[#1e3a5f]">
-                                    <div className="flex items-center gap-3">
-                                      <span className="font-medium text-[#1e3a5f]">
-                                        {sched.merchandise_item?.name || ""}
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="p-2 align-middle text-sm">
-                                    {dayjs(sched.expected_date).format(
-                                      "MMM D, YYYY",
-                                    ) || "N/A"}
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    {sched.expected_quantity}
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    <div
-                                      className={`inline-flex items-center rounded-md px-2.5 py-0.5 font-semibold transition-color border-transparent shadow border text-xs ${
-                                        statusStyles[sched.status] || ""
-                                      }`}
+                                    {sched.status || "N/A"}
+                                  </div>
+                                </td>
+                                <td className="p-2 align-middle text-sm text-slate-500 max-w-48">
+                                  {sched.note || "N/A"}
+                                </td>
+                                <td className="p-2 align-middle">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const rect =
+                                        e.currentTarget.getBoundingClientRect();
+                                      const menuWidth = 128;
+                                      const padding = 8;
+
+                                      let left = rect.right - menuWidth;
+
+                                      if (left + menuWidth) {
+                                        left =
+                                          window.innerWidth -
+                                          menuWidth -
+                                          padding;
+                                      }
+
+                                      if (left < padding) left = padding;
+
+                                      setMenuPosition({
+                                        top: rect.bottom + 6,
+                                        left: rect.right - menuWidth,
+                                      });
+                                      setOpenMenuId((prevId) =>
+                                        prevId === sched._id ? null : sched._id,
+                                      );
+                                    }}
+                                    className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={1.5}
+                                      stroke="currentColor"
+                                      className="size-6 text-slate-500"
                                     >
-                                      {sched.status || "N/A"}
-                                    </div>
-                                  </td>
-                                  <td className="p-2 align-middle text-sm text-slate-500 max-w-48">
-                                    {sched.notes || "N/A"}
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const rect =
-                                          e.currentTarget.getBoundingClientRect();
-                                        const menuWidth = 128;
-                                        setMenuPosition({
-                                          top: rect.bottom + 6,
-                                          left: rect.right - menuWidth,
-                                        });
-                                        setOpenMenuId((prevId) =>
-                                          prevId === sched.id ? null : sched.id,
-                                        );
-                                      }}
-                                      className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
-                                    >
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.5}
-                                        stroke="currentColor"
-                                        className="size-6 text-slate-500"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+                                      />
+                                    </svg>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan={6}
+                                className="text-center text-slate-500 py-4"
+                              >
+                                No Restock Schedule.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -329,7 +356,7 @@ export default function RestockSchedule() {
           <div
             ref={menuRef}
             style={{ top: menuPosition.top, left: menuPosition.left }}
-            className="absolute right-10 w-32 rounded-md border border-slate-200 bg-transparent bg-white shadow-lg z-50"
+            className="fixed w-32 rounded-md border border-slate-200 bg-transparent bg-white shadow-lg z-50"
           >
             <button
               onClick={() => handleEditSchedule(openMenuId)}
@@ -375,10 +402,13 @@ export default function RestockSchedule() {
         </>
       )}
 
+      {/* Add / Edit Restock Schedule Modal */}
       <Modal
         isOpen={isRestockModalOpen}
         onClose={() => setIsRestockModalOpen(false)}
-        title="New Restock Schedule"
+        title={
+          mode === "edit" ? "Edit Restock Schedule" : "New Restock Schedule"
+        }
       >
         <div className="space-y-4 py-2">
           <div className="relative">
@@ -390,7 +420,7 @@ export default function RestockSchedule() {
               onClick={() => setOpenSelectItem(!openSelectItem)}
               className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input px-3 py-2 text-sm shadow-sm ring-offset-background w-full bg-white"
             >
-              <span>{restockForm.merchandise_item?.name || "Select Item"}</span>
+              <span>{restockForm.productId.item_name || "Select Item"}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -407,20 +437,21 @@ export default function RestockSchedule() {
               </svg>
             </button>
             {openSelectItem && (
-              <ul className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-md">
+              <ul className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-md max-h-60 overflow-y-auto">
                 {items.map((item) => (
                   <li
-                    key={item.id}
+                    key={item._id}
                     className="px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm"
                     onClick={() => {
                       setRestockForm({
                         ...restockForm,
-                        merchandise_item: item,
+                        productId: item._id,
+                        item_name: item.item_name,
                       });
                       setOpenSelectItem(false);
                     }}
                   >
-                    {item.name}
+                    {item.item_name}
                   </li>
                 ))}
               </ul>
@@ -433,12 +464,15 @@ export default function RestockSchedule() {
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 value={
-                  restockForm.expected_date
-                    ? dayjs(restockForm.expected_date)
+                  restockForm.restockDate
+                    ? dayjs(restockForm.restockDate)
                     : null
                 }
                 onChange={(newValue) =>
-                  setRestockForm({ ...restockForm, expected_date: newValue })
+                  setRestockForm({
+                    ...restockForm,
+                    restockDate: newValue ? newValue.toISOString() : null,
+                  })
                 }
                 slotProps={{
                   textField: {
@@ -458,11 +492,11 @@ export default function RestockSchedule() {
             <input
               type="number"
               min={0}
-              value={restockForm.expected_quantity}
+              value={restockForm.quantity}
               onChange={(e) =>
                 setRestockForm({
                   ...restockForm,
-                  expected_quantity: e.target.value,
+                  quantity: Number(e.target.value),
                 })
               }
               className="inline-flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors md:text-sm"
@@ -511,9 +545,9 @@ export default function RestockSchedule() {
             <label className="text-sm font-medium leading">Notes</label>
             <textarea
               type="text"
-              value={restockForm.notes}
+              value={restockForm.note}
               onChange={(e) =>
-                setRestockForm({ ...restockForm, notes: e.target.value })
+                setRestockForm({ ...restockForm, note: e.target.value })
               }
               className="inline-flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors md:text-sm"
             />
@@ -521,13 +555,13 @@ export default function RestockSchedule() {
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4 py-4 border-t border-slate-200 mt-4">
             <button
               onClick={() => setIsRestockModalOpen(false)}
-              className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 px-4 py-2 rounded-md cursor-pointer"
+              className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 px-4 py-2 mt-1.5 sm:mt-0 rounded-md cursor-pointer"
             >
               <span>Cancel</span>
             </button>
             <button
-              onClick={savedRestockSchedule}
-              className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md cursor-pointer"
+              onClick={saved}
+              className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 mb-1.5 sm:mb-0 rounded-md cursor-pointer"
             >
               <span>Save Schedule</span>
             </button>
@@ -535,11 +569,11 @@ export default function RestockSchedule() {
         </div>
       </Modal>
 
-      {/* Delete Product Modal */}
+      {/* Delete Modal */}
       <Modal
         isOpen={isDelRestockSchedModalOpen}
         onClose={() => setIsDelRestockSchedModalOpen(false)}
-        title="Delete Product"
+        title="Delete Restock Schedule"
         children={
           <>
             <h1 className="text-slate-500">
