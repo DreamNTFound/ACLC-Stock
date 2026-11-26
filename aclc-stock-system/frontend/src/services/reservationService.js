@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 export const reservationService = {
   getAllReservation: () => {
     return api(() =>
-      secureFetch(`${API_URL}/api/reservations`, {
+      secureFetch(`${API_URL}/reservations`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -18,7 +18,7 @@ export const reservationService = {
 
   getMyReservation: async (profileId) => {
     return api(() =>
-      secureFetch(`${API_URL}/api/reservations/user/${profileId}`, {
+      secureFetch(`${API_URL}/reservations/user/${profileId}`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -30,7 +30,7 @@ export const reservationService = {
 
   addReservation: (reservation) =>
     api(() => {
-      return secureFetch(`${API_URL}/api/reservations`, {
+      return secureFetch(`${API_URL}/reservations`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -42,7 +42,7 @@ export const reservationService = {
 
   updateReservation: (reservationId, updatedData) =>
     api(() => {
-      return secureFetch(`${API_URL}/api/reservations/${reservationId}`, {
+      return secureFetch(`${API_URL}/reservations/${reservationId}`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -54,15 +54,12 @@ export const reservationService = {
 
   cancelReservation: (reservationId) =>
     api(() => {
-      return secureFetch(
-        `${API_URL}/api/reservations/${reservationId}/cancel`,
-        {
-          method: "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      return secureFetch(`${API_URL}/reservations/${reservationId}/cancel`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
     }),
 };

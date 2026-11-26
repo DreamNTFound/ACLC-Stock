@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 export const restockScheduleService = {
   getAllRestockSchedules: () =>
     api(() =>
-      secureFetch(`${API_URL}/api/restock-schedules`, {
+      secureFetch(`${API_URL}/restock-schedules`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -17,7 +17,7 @@ export const restockScheduleService = {
 
   createRestockSchedule: (reservation) =>
     api(() => {
-      return secureFetch(`${API_URL}/api/restock-schedules`, {
+      return secureFetch(`${API_URL}/restock-schedules`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -29,7 +29,7 @@ export const restockScheduleService = {
 
   updateRestockSchedule: (id, updatedData) =>
     api(() => {
-      return secureFetch(`${API_URL}/api/restock-schedules/${id}`, {
+      return secureFetch(`${API_URL}/restock-schedules/${id}`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -41,7 +41,7 @@ export const restockScheduleService = {
 
   deleteRestockSchedule: (id) =>
     api(() =>
-      secureFetch(`${API_URL}/api/restock-schedules/${id}`, {
+      secureFetch(`${API_URL}/restock-schedules/${id}`, {
         method: "DELETE",
         credentials: "include",
         headers: {
