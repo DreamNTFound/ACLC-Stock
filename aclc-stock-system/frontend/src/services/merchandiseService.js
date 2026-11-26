@@ -3,6 +3,8 @@ import { secureFetch } from "./authService";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+const PRODUCT_URL = `${API_URL}/products`;
+
 export const productService = {
   getAllProduct: () =>
     api(() =>
@@ -17,7 +19,7 @@ export const productService = {
 
   getAllProductsForAdmin: () =>
     api(() =>
-      secureFetch(`${API_URL}/admin/all`, {
+      secureFetch(`${PRODUCT_URL}/admin/all`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -28,7 +30,7 @@ export const productService = {
 
   archiveProduct: (id) =>
     api(() =>
-      secureFetch(`${API_URL}/${id}/archive`, {
+      secureFetch(`${PRODUCT_URL}/${id}/archive`, {
         method: "PATCH",
         credentials: "include",
         headers: {
@@ -39,7 +41,7 @@ export const productService = {
 
   restoreProduct: (id) =>
     api(() =>
-      secureFetch(`${API_URL}/${id}/restore`, {
+      secureFetch(`${PRODUCT_URL}/${id}/restore`, {
         method: "PATCH",
         credentials: "include",
         headers: {
@@ -66,7 +68,7 @@ export const productService = {
         formData.append("item_images", file);
       });
 
-      return secureFetch(API_URL, {
+      return secureFetch(PRODUCT_URL, {
         method: "POST",
         credentials: "include",
         headers: {},
@@ -100,7 +102,7 @@ export const productService = {
         formData.append("existing_images", file);
       });
 
-      return secureFetch(`${API_URL}/${id}`, {
+      return secureFetch(`${PRODUCT_URL}/${id}`, {
         method: "PUT",
         credentials: "include",
         headers: {},
@@ -110,7 +112,7 @@ export const productService = {
 
   deleteProduct: (id) =>
     api(() =>
-      secureFetch(`${API_URL}/${id}`, {
+      secureFetch(`${PRODUCT_URL}/${id}`, {
         method: "DELETE",
         credentials: "include",
         headers: {},
