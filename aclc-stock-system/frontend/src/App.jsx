@@ -2,7 +2,7 @@ import "./App.css";
 //import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useContext } from "react";
 
-import UserContext, { UserProvider } from "@/context/UserContext";
+import UserContext, { UserProvider } from "@/context/userContext";
 import { useAuthExpired } from "@/hooks/useAuthExpired";
 
 import socket from "@/socket";
