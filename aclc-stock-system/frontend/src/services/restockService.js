@@ -1,36 +1,50 @@
-import { getStorage, setStorage } from "./storage";
 import { api } from "./api";
+import { secureFetch } from "./authService";
 
-const RESTOCK_SCHEDULE_KEY = "restock_schedule";
+export const restockScheduleService = {
+  getAllRestockSchedules: () =>
+    api(() =>
+      secureFetch("http://localhost:5000/api/restock-schedules", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    ),
 
-export const getSched = () =>
-  api(() => {
-    return getStorage(RESTOCK_SCHEDULE_KEY) || [];
-  });
+  createRestockSchedule: (reservation) =>
+    api(() => {
+      return secureFetch("http://localhost:5000/api/restock-schedules", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reservation),
+      });
+    }),
 
-export const addSched = (sched) =>
-  api(() => {
-    const scheds = getStorage(RESTOCK_SCHEDULE_KEY) || [];
-    const newSched = { id: Date.now(), ...sched };
-    const updatedSched = [...scheds, newSched];
-    setStorage(RESTOCK_SCHEDULE_KEY, updatedSched);
-    return newSched;
-  });
+  updateRestockSchedule: (id, updatedData) =>
+    api(() => {
+      return secureFetch(`http://localhost:5000/api/restock-schedules/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+    }),
 
-export const updateSched = (id, updatedData) =>
-  api(() => {
-    const scheds = getStorage(RESTOCK_SCHEDULE_KEY) || [];
-    const updatedSched = scheds.map((sched) =>
-      sched.id === id ? { ...scheds, ...updatedData } : sched,
-    );
-    setStorage(RESTOCK_SCHEDULE_KEY, updatedSched);
-    return updatedSched.find((sched) => sched.id === id);
-  });
-
-export const deleteSched = (id) =>
-  api(() => {
-    const scheds = getStorage(RESTOCK_SCHEDULE_KEY) || [];
-    const filtered = scheds.filter((sched) => sched.id !== id);
-    setStorage(RESTOCK_SCHEDULE_KEY, filtered);
-    return filtered;
-  });
+  deleteRestockSchedule: (id) =>
+    api(() =>
+      secureFetch(`http://localhost:5000/api/restock-schedules/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    ),
+};
