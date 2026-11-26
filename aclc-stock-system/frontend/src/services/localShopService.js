@@ -1,52 +1,127 @@
-import { getStorage, setStorage } from "./storage";
 import { api } from "./api";
+import { secureFetch } from "./authService";
 
-const LOCAL_SHOP_KEY = "localShop";
-const RECOMMENDED_KEY = "shopRecommendation";
+export const recommendedShopService = {
+  getRecommendedShop: () =>
+    api(() =>
+      secureFetch("http://localhost:5000/api/local-shops", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    ),
 
-export const getLocalShop = () =>
-  api(() => {
-    return getStorage(LOCAL_SHOP_KEY) || [];
-  });
+  addLocalShop: (shop) =>
+    api(() => {
+      return secureFetch("http://localhost:5000/api/local-shops", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(shop),
+      });
+    }),
 
-export const addLocalShop = (shop) =>
-  api(() => {
-    const shops = getStorage(LOCAL_SHOP_KEY) || [];
-    const newShops = { id: Date.now(), avail_items: [], ...shop };
-    const updatedShops = [...shops, newShops];
-    setStorage(LOCAL_SHOP_KEY, updatedShops);
-    return newShops;
-  });
+  updateLocalShop: (id, updatedData) =>
+    api(() => {
+      return secureFetch(`http://localhost:5000/api/local-shops/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+    }),
 
-export const updateLocalShop = (id, updatedData) =>
-  api(() => {
-    const shops = getStorage(LOCAL_SHOP_KEY) || [];
-    const updatedShops = shops.map((shop) =>
-      shop.id === id ? { ...shop, ...updatedData } : shop,
-    );
-    setStorage(LOCAL_SHOP_KEY, updatedShops);
-    return updatedShops.find((shop) => shop.id === id);
-  });
+  deleteLocalShop: (id) =>
+    api(() => {
+      return secureFetch(`http://localhost:5000/api/local-shops/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }),
+};
 
-export const deleteLocalShop = (id) =>
-  api(() => {
-    const shops = getStorage(LOCAL_SHOP_KEY) || [];
-    const filtered = shops.filter((shop) => shop.id !== id);
-    setStorage(LOCAL_SHOP_KEY, filtered);
-    return filtered;
-  });
-
-export const setRecommendedShop = (shopId) =>
-  api(() => {
-    setStorage(RECOMMENDED_KEY, { id: shopId });
-  });
-
-export const getRecommendedShops = (itemName) =>
-  api(() => {
-    const shops = getStorage(LOCAL_SHOP_KEY) || [];
-    const recommendation = shops.filter((shop) =>
-      shop.avail_items.includes(itemName),
-    );
-    if (!recommendation || recommendation.length === 0) return null;
-    return recommendation;
-  });
+// export const recommendedShopService = {
+//   addLocalShop: (shop) =>
+//     api(async () => {
+//       try {
+//         const users = JSON.parse(localStorage.getItem("user"));
+//         const  = users?.;
+//         if (!) throw new Error("User not authenticated.");
+//         return fetch("http://localhost:5000/api/local-shops", {
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${}`,
+//           },
+//           body: JSON.stringify(shop),
+//         });
+//       } catch (error) {
+//         console.error("Error creating recommended shop:", error);
+//         throw error;
+//       }
+//     }),
+//   getRecommendedShop: () =>
+//     api(async () => {
+//       try {
+//         const users = JSON.parse(localStorage.getItem("user"));
+//         const  = users?.;
+//         if (!) throw new Error("User not authenticated.");
+//         return fetch("http://localhost:5000/api/local-shops", {
+//           method: "GET",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${}`,
+//           },
+//         });
+//       } catch (error) {
+//         console.error("Error fetching recommended shop;", error);
+//         throw error;
+//       }
+//     }),
+//   updateLocalShop: (id, updatedData) =>
+//     api(async () => {
+//       try {
+//         const users = JSON.parse(localStorage.getItem("user"));
+//         const  = users?.;
+//         if (!) throw new Error("User not authenticated.");
+//         return fetch(`http://localhost:5000/api/local-shops/${id}`, {
+//           method: "PUT",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${}`,
+//           },
+//           body: JSON.stringify(updatedData),
+//         });
+//       } catch (error) {
+//         console.error("Error updating recommended shop:", error);
+//         throw error;
+//       }
+//     }),
+//   deleteLocalShop: (id) =>
+//     api(async () => {
+//       try {
+//         const users = JSON.parse(localStorage.getItem("user"));
+//         const  = users?.;
+//         if (!) throw new Error("User not authenticated.");
+//         return fetch(`http://localhost:5000/api/local-shops/${id}`, {
+//           method: "DELETE",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${}`,
+//           },
+//         });
+//       } catch (error) {
+//         console.error("Error deleting recommended shop:", error);
+//         throw error;
+//       }
+//     }),
+// };
