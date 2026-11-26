@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { getLocalShop } from "../services/localShopService";
-import { categoryOptions } from "../utils/formatHelpers";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import { recommendedShopService } from "@/services/localShopService";
+import { categoryOptions } from "@/utils/formatHelpers";
+import Skeleton from "@mui/material/Skeleton";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function LocalShop() {
   const [shops, setShops] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectItemCategory, setItemCategory] = useState("All Items");
   const [openSelectCategory, setOpenSelectCategory] = useState(false);
@@ -13,9 +15,10 @@ export default function LocalShop() {
   useEffect(() => {
     const fetchShops = async () => {
       try {
-        const shops = await getLocalShop();
+        const shops = await recommendedShopService.getRecommendedShop();
         setTimeout(() => {
           setShops(shops);
+          setLoading(false);
         }, 500);
       } catch (error) {
         console.log("Error fetching shops:", error);
@@ -28,7 +31,7 @@ export default function LocalShop() {
     const term = searchTerm?.toLowerCase();
     const matchSearch =
       !term ||
-      shop.name.toLowerCase().includes(term) ||
+      shop.shopName.toLowerCase().includes(term) ||
       shop.address.toLowerCase().includes(term);
     const matchCategory =
       !selectItemCategory ||
@@ -130,84 +133,108 @@ export default function LocalShop() {
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {filteredItems.map((shop) => (
-                  <div
-                    key={shop.id}
-                    className="rounded-xl border-bg-card-foreground shadow overflow-hidden hover:shadow-lg transition-all duration-300 border-slate-200 opacity-0 animate-fadeIn"
-                  >
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-[#1e3a5f] text-lg">
-                              {shop.name}
-                            </h3>
-                            {shop.partner && (
-                              <div className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors shadow hover:bg-primary/80 bg-[#d4a843]/15 text-[#d4a843] border-[#d4a843]/30 text-[10px]">
-                                <span className="text-yellow-400 text-xs">
-                                  ★ Partner
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-start gap-2 text-sm text-slate-500">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-4 h-4 mt-0.5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
-                              />
-                            </svg>
-                            <span>{shop.address}</span>
-                          </div>
-                        </div>
+                {loading ? (
+                  Array.from({ length: 6 }).map((_, idx) => (
+                    <div key={idx} className="p-4 border rounded-xl mb-4">
+                      <div className="flex items-center gap-4 mb-3">
+                        <Skeleton variant="text" width="50%" height={35} />
+                        <Skeleton variant="rounded" width="20%" height={20} />
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="w-4 h-4 "
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
-                          />
-                        </svg>
-                        <span>{shop.contact}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {shop.avail_items.map((item, i) => (
-                          <div
+
+                      <Skeleton variant="text" width="40%" className="mb-2" />
+                      <Skeleton variant="text" width="35%" className="mb-4" />
+
+                      <div className="flex gap-2 flex-wrap mt-1 mb-4">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Skeleton
                             key={i}
-                            className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors border-transparent bg-slate-100 text-secondary-foreground text-[10px]"
-                          >
-                            {item}
-                          </div>
+                            variant="rounded"
+                            width={50}
+                            height={20}
+                          />
                         ))}
                       </div>
-                      <a
-                        href={shop.mapLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors border bg-background shadow-sm hover:text-accent-foreground h-8 rounded-md px-3 text-xs w-full text-[#1e3a5f] border-[#1e3a5f]/20 hover:bg-[#1e3a5f]/5 mt-2"
-                      >
-                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors border bg-background shadow-sm hover:text-accent-foreground h-8 rounded-md px-3 text-xs w-full text-[#1e3a5f] border-[#1e3a5f]/20 hover:bg-[#1e3a5f]/5">
+                      <Skeleton variant="rounded" width="100%" height={42} />
+                    </div>
+                  ))
+                ) : filteredItems.length > 0 ? (
+                  filteredItems.map((shop) => (
+                    <div
+                      key={shop._id}
+                      className="rounded-xl border-bg-card-foreground shadow overflow-hidden hover:shadow-lg transition-all duration-300 border-slate-200 opacity-0 animate-fadeIn"
+                    >
+                      <div className="p-5">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-[#1e3a5f] text-lg">
+                                {shop.shopName}
+                              </h3>
+                              {shop.partner && (
+                                <div className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors shadow hover:bg-primary/80 bg-[#d4a843]/15 text-[#d4a843] border-[#d4a843]/30 text-[10px]">
+                                  <span className="text-yellow-400 text-xs">
+                                    ★ Partner
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-start gap-2 text-sm text-slate-500">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-4 h-4 mt-0.5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+                                />
+                              </svg>
+                              <span>{shop.address}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="w-4 h-4 "
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
+                            />
+                          </svg>
+                          <span>{shop.contact}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {shop.avail_items.map((item, i) => (
+                            <div
+                              key={i}
+                              className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors border-transparent bg-slate-100 text-secondary-foreground text-[10px]"
+                            >
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                        <a
+                          href={shop.mapLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors border bg-background shadow-sm hover:text-accent-foreground h-8 rounded-md px-3 text-xs w-full text-[#1e3a5f] border-[#1e3a5f]/20 hover:bg-[#1e3a5f]/5 mt-2"
+                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
@@ -224,11 +251,17 @@ export default function LocalShop() {
                           </svg>
 
                           <span>View on Map</span>
-                        </button>
-                      </a>
+                        </a>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-10">
+                    <span className="text-sm text-slate-500 font-semibold">
+                      No shops found.
+                    </span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
