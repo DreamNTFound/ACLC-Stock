@@ -8,7 +8,7 @@ const PRODUCT_URL = `${API_URL}/products`;
 export const productService = {
   getAllProduct: () =>
     api(() =>
-      secureFetch(API_URL, {
+      secureFetch(PRODUCT_URL, {
         method: "GET",
         credentials: "include",
         headers: {
