@@ -23,16 +23,25 @@ const app = express();
 const server = require("http").createServer(app);
 const PORT = process.env.PORT || 5000;
 
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "ACLC Stock System API is running",
+  });
+});
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: frontendUrl,
     credentials: true,
   },
 });
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: frontendUrl,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
@@ -68,6 +77,17 @@ io.on("connection", (socket) => {
   });
 });
 
+app.use("/uploads", express.static("uploads"));
+app.use("/api/chatbot", geminiChatbot);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/auth", forgotPasswordRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/profiles", userProfile);
+app.use("/api/products", productRoutes);
+app.use("/api/restock-schedules", restockScheduleRoutes);
+app.use("/api/local-shops", localShopRoutes);
+app.use("/api/reservations", reservationRoutes);
+
 // Connect to the database
 const start = async () => {
   try {
@@ -85,14 +105,3 @@ const start = async () => {
 };
 
 start();
-
-app.use("/uploads", express.static("uploads"));
-app.use("/api/chatbot", geminiChatbot);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/auth", forgotPasswordRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/profiles", userProfile);
-app.use("/api/products", productRoutes);
-app.use("/api/restock-schedules", restockScheduleRoutes);
-app.use("/api/local-shops", localShopRoutes);
-app.use("/api/reservations", reservationRoutes);
