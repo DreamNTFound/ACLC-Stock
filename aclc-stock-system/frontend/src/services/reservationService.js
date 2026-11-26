@@ -1,38 +1,69 @@
-import { getStorage, setStorage } from "./storage";
 import { api } from "./api";
+import { secureFetch } from "./authService";
 
-const RESERVE_KEY = "reservations";
-
-export const getReservations = () =>
-  api(() => {
-    return getStorage(RESERVE_KEY) || [];
-  });
-
-export const addReservation = (reservation) =>
-  api(() => {
-    const reservations = getStorage(RESERVE_KEY) || [];
-    const newReservation = {
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      ...reservation,
-    };
-    const updatedReservations = [...reservations, newReservation];
-    setStorage(RESERVE_KEY, updatedReservations);
-    return newReservation;
-  });
-
-export const updateReservationStatus = (id, newStatus) =>
-  api(() => {
-    const reservations = getStorage(RESERVE_KEY) || [];
-    const updatedReservations = reservations.map((reservation) =>
-      reservation.id === id
-        ? {
-            ...reservation,
-            status: newStatus,
-            updatedAt: new Date().toISOString(),
-          }
-        : reservation,
+export const reservationService = {
+  getAllReservation: () => {
+    return api(() =>
+      secureFetch("http://localhost:5000/api/reservations", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
     );
-    setStorage(RESERVE_KEY, updatedReservations);
-    return updatedReservations;
-  });
+  },
+
+  getMyReservation: async (profileId) => {
+    return api(() =>
+      secureFetch(`http://localhost:5000/api/reservations/user/${profileId}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    );
+  },
+
+  addReservation: (reservation) =>
+    api(() => {
+      return secureFetch("http://localhost:5000/api/reservations", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reservation),
+      });
+    }),
+
+  updateReservation: (reservationId, updatedData) =>
+    api(() => {
+      return secureFetch(
+        `http://localhost:5000/api/reservations/${reservationId}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        },
+      );
+    }),
+
+  cancelReservation: (reservationId) =>
+    api(() => {
+      return secureFetch(
+        `http://localhost:5000/api/reservations/${reservationId}/cancel`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }),
+};
