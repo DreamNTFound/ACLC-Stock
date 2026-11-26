@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { getItems } from "../services/merchandiseService";
-import { formatCurrency } from "../utils/formatCurrency";
-import { categoryOptions } from "../utils/formatHelpers";
-import { statusOptions } from "../utils/formatHelpers";
+import { productService } from "@/services/merchandiseService";
+import { formatCurrency } from "@/utils/formatCurrency";
+import { categoryOptions } from "@/utils/formatHelpers";
+import { statusOptions } from "@/utils/formatHelpers";
+import ChatAssistant from "@/components/assistant/ChatAssistant";
 import Skeleton from "@mui/material/Skeleton";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { useNearBottom } from "@/utils/useScrollBoundary";
 
 export default function Homepage() {
+  const isNearBottom = useNearBottom(150);
   const [items, setItems] = useState([]);
   const [searchItem, setSearchItem] = useState("");
   const [selectCategory, setSelectCategory] = useState("All Category");
@@ -16,28 +19,39 @@ export default function Homepage() {
   const [selectStatus, setSelectStatus] = useState("All Status");
   const [openSelectStatus, setOpenSelectStatus] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [openChatAssistant, setOpenChatAssistant] = useState(false);
 
   useEffect(() => {
     const fetchItems = async () => {
-      const data = await getItems();
-      setTimeout(() => {
+      try {
+        const data = await productService.getAllProduct();
         setItems(data);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+        setError("Failed to fetch items.");
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     };
     fetchItems();
   }, []);
 
   const getTotalStock = (item) => {
-    if (item.sizes && item.sizes.length > 0) {
-      return item.sizes.reduce((total, s) => total + Number(s.stock), 0);
+    if (item.item_sizes && item.item_sizes.length > 0) {
+      return item.item_sizes.reduce(
+        (total, s) => total + Number(s.item_stock),
+        0,
+      );
     }
-    return item.stock;
+    return item.item_stock;
   };
 
   const filteredItems = items.filter((item) => {
+    if (item?.item_visible === false) return false;
+
     if (selectCategory && selectCategory !== "All Category") {
-      if (item.category !== selectCategory) return false;
+      if (item.item_category !== selectCategory) return false;
     }
     if (selectStatus && selectStatus !== "All Status") {
       const totalStock = getTotalStock(item);
@@ -49,11 +63,10 @@ export default function Homepage() {
     if (searchItem && searchItem.trim() !== "") {
       const searchTerm = searchItem.toLowerCase();
       return (
-        item.name.toLowerCase().includes(searchTerm) ||
-        item.description.toLowerCase().includes(searchTerm)
+        item.item_name.toLowerCase().includes(searchTerm) ||
+        item.item_description.toLowerCase().includes(searchTerm)
       );
     }
-    if (item?.visible === false) return false;
     return true;
   });
 
@@ -62,7 +75,11 @@ export default function Homepage() {
     if (totalStock === 0) return "Out of Stock";
     if (totalStock <= 5) return "Low Stock";
     if (totalStock > 5) return "In Stock";
-    return item.stock;
+    return item.item_stock;
+  };
+
+  const chatBotHandler = () => {
+    setOpenChatAssistant(!openChatAssistant);
   };
 
   return (
@@ -237,56 +254,120 @@ export default function Homepage() {
               </div>
               {/* Merchandise Grid Section */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {loading
-                  ? Array.from({ length: 8 }).map((_, idx) => (
-                      <div key={idx}>
-                        <div>
+                {loading ? (
+                  Array.from({ length: 8 }).map((_, idx) => (
+                    <div key={idx}>
+                      <div>
+                        <Skeleton
+                          variant="rectangular"
+                          width="100%"
+                          height={200}
+                          className="rounded-xl"
+                        />
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <Skeleton
+                          variant="rectangular"
+                          width="100%"
+                          height={15}
+                          className="rounded-md"
+                        />
+                        <div className="flex items-center justify-between">
                           <Skeleton
                             variant="rectangular"
-                            width="100%"
-                            height={200}
-                            className="rounded-xl"
+                            width="50%"
+                            height={10}
+                            className="flex rounded-md"
                           />
-                        </div>
-                        <div className="mt-4 space-y-2">
                           <Skeleton
                             variant="rectangular"
-                            width="100%"
-                            height={15}
-                            className="rounded-md"
+                            width="30%"
+                            height={10}
+                            className="flex rounded-md"
                           />
-                          <div className="flex items-center justify-between">
-                            <Skeleton
-                              variant="rectangular"
-                              width="50%"
-                              height={10}
-                              className="flex rounded-md"
-                            />
-                            <Skeleton
-                              variant="rectangular"
-                              width="30%"
-                              height={10}
-                              className="flex rounded-md"
-                            />
-                          </div>
                         </div>
                       </div>
-                    ))
-                  : filteredItems?.map((item) => (
-                      <NavLink
-                        to={`/merchandise-details/${item.id}`}
-                        key={item.id}
-                        className="opacity-0 animate-fadeIn"
-                      >
-                        <div className="rounded-xl border-bg-card text-card-foreground shadow group overflow-hidden hover:shadow-xl transition-all duration-300 border-slate-200 hover:border-[#d4a843]/40 cursor-pointer h-full">
-                          <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                            {item?.images?.[0] ? (
-                              <img
-                                src={item.images?.[0] || "/placeholder.png"}
-                                alt="Preview"
-                                className="w-full h-full object-cover group-hover:scale-105 transition duration-50"
-                              />
-                            ) : (
+                    </div>
+                  ))
+                ) : error ? (
+                  <p className="text-red-500">Error: {error}</p>
+                ) : filteredItems.length > 0 ? (
+                  filteredItems?.map((item) => (
+                    <NavLink
+                      to={`/merchandise-details/${item._id}`}
+                      key={item._id}
+                      className="opacity-0 animate-fadeIn"
+                    >
+                      <div className="rounded-xl border-bg-card text-card-foreground shadow group overflow-hidden hover:shadow-xl transition-all duration-300 border-slate-200 hover:border-[#d4a843]/40 cursor-pointer h-full">
+                        <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                          {item?.item_images?.[0] ? (
+                            <img
+                              src={`http://localhost:5000/uploads/${item?.item_images?.[0]}`}
+                              alt="Preview"
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-50"
+                            />
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="lucide lucide-package-icon lucide-package w-24 h-24 text-slate-400"
+                            >
+                              <path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" />
+                              <path d="M12 22V12" />
+                              <polyline points="3.29 7 12 12 20.71 7" />
+                              <path d="m7.5 4.27 9 5.15" />
+                            </svg>
+                          )}
+
+                          <div
+                            className={`inline-flex items-center rounded-md px-2.5 py-0.5 transition-colors shadow hover:bg-primary/80 absolute top-3 right-3 border text-xs font-medium ${
+                              getStockStatus(item) === "Out of Stock"
+                                ? "bg-red-100 text-red-700"
+                                : getStockStatus(item) === "Low Stock"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-emerald-100 text-emerald-700"
+                            }`}
+                          >
+                            {getStockStatus(item) === "Out of Stock" && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-3 h-3 mr-1 text-red-700"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                />
+                              </svg>
+                            )}
+                            {getStockStatus(item) === "Low Stock" && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-3 h-3 mr-1 text-amber-700"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                                />
+                              </svg>
+                            )}
+                            {getStockStatus(item) === "In Stock" && (
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="24"
@@ -297,7 +378,7 @@ export default function Homepage() {
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className="lucide lucide-package-icon lucide-package w-24 h-24 text-slate-400"
+                                className="lucide lucide-package-icon lucide-package w-3 h-3 mr-1 text-emerald-700"
                               >
                                 <path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" />
                                 <path d="M12 22V12" />
@@ -305,93 +386,63 @@ export default function Homepage() {
                                 <path d="m7.5 4.27 9 5.15" />
                               </svg>
                             )}
-
-                            <div
-                              className={`inline-flex items-center rounded-md px-2.5 py-0.5 transition-colors shadow hover:bg-primary/80 absolute top-3 right-3 border text-xs font-medium ${
-                                getStockStatus(item) === "Out of Stock"
-                                  ? "bg-red-100 text-red-700"
-                                  : getStockStatus(item) === "Low Stock"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-emerald-100 text-emerald-700"
-                              }`}
-                            >
-                              {getStockStatus(item) === "Out of Stock" && (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={1.5}
-                                  stroke="currentColor"
-                                  className="w-3 h-3 mr-1 text-red-700"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                                  />
-                                </svg>
-                              )}
-                              {getStockStatus(item) === "Low Stock" && (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={1.5}
-                                  stroke="currentColor"
-                                  className="w-3 h-3 mr-1 text-amber-700"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-                                  />
-                                </svg>
-                              )}
-                              {getStockStatus(item) === "In Stock" && (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className="lucide lucide-package-icon lucide-package w-3 h-3 mr-1 text-emerald-700"
-                                >
-                                  <path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" />
-                                  <path d="M12 22V12" />
-                                  <polyline points="3.29 7 12 12 20.71 7" />
-                                  <path d="m7.5 4.27 9 5.15" />
-                                </svg>
-                              )}
-                              {getStockStatus(item)}
-                            </div>
-                          </div>
-                          <div className="p-4">
-                            <p className="text-xs font-medium text-[#d4a843] uppercase tracking-wider mb-1">
-                              {item.category}
-                            </p>
-                            <h3 className="font-semibold text-[#1e3a5f] text-lg leading-tight mb-2 group-hover:text-[#2a4d7a] transition-colors">
-                              {item.name}
-                            </h3>
-                            <div className="flex items-end justify-between">
-                              <p className="text-xs font-bold text-[#1e3a5f]">
-                                {formatCurrency(item.price)}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                {getTotalStock(item)} in stock
-                              </p>
-                            </div>
+                            {getStockStatus(item)}
                           </div>
                         </div>
-                      </NavLink>
-                    ))}
+                        <div className="p-4">
+                          <p className="text-xs font-medium text-[#d4a843] uppercase tracking-wider mb-1">
+                            {item.item_category}
+                          </p>
+                          <h3 className="font-semibold text-[#1e3a5f] text-lg leading-tight mb-2 group-hover:text-[#2a4d7a] transition-colors">
+                            {item.item_name}
+                          </h3>
+                          <div className="flex items-end justify-between">
+                            <p className="text-xs font-bold text-[#1e3a5f]">
+                              {formatCurrency(item.item_price)}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {getTotalStock(item)} in stock
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </NavLink>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-10">
+                    <span className="text-sm text-slate-500 font-semibold">
+                      No items found.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+
+        <button
+          onClick={chatBotHandler}
+          className={`fixed right-6 z-50 w-14 h-14 rounded-full bg-[#1e3a5f] text-white shadow-lg hover:bg-[#2a4d7a] transition-[bottom] duration-500 ease-in-out flex items-center justify-center ${
+            isNearBottom ? "bottom-24" : "bottom-6"
+          }`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z"
+            />
+          </svg>
+        </button>
+        {openChatAssistant && <ChatAssistant onClose={chatBotHandler} />}
+
         {/* Footer */}
         <footer className="border-t border-slate-200 bg-white mt-8">
           <Footer />
