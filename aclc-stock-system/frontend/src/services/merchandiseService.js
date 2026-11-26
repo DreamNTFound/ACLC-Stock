@@ -1,36 +1,119 @@
-import { getStorage, setStorage } from "./storage";
 import { api } from "./api";
+import { secureFetch } from "./authService";
 
-const MERCHANDISE_KEY = "merchandise_items";
+const PRODUCT_URL = "http://localhost:5000/api/products";
 
-export const getItems = () =>
-  api(() => {
-    return getStorage(MERCHANDISE_KEY) || [];
-  });
+export const productService = {
+  getAllProduct: () =>
+    api(() =>
+      secureFetch(PRODUCT_URL, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    ),
 
-export const addItem = (item) =>
-  api(() => {
-    const items = getStorage(MERCHANDISE_KEY) || [];
-    const newItem = { id: Date.now(), images: [], sizes: [], ...item };
-    const updatedItems = [...items, newItem];
-    setStorage(MERCHANDISE_KEY, updatedItems);
-    return newItem;
-  });
+  getAllProductsForAdmin: () =>
+    api(() =>
+      secureFetch(`${PRODUCT_URL}/admin/all`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    ),
 
-export const updateItem = (id, updatedData) =>
-  api(() => {
-    const items = getStorage(MERCHANDISE_KEY) || [];
-    const updatedItems = items.map((item) =>
-      item.id === id ? { ...item, ...updatedData } : item,
-    );
-    setStorage(MERCHANDISE_KEY, updatedItems);
-    return updatedItems.find((item) => item.id === id);
-  });
+  archiveProduct: (id) =>
+    api(() =>
+      secureFetch(`${PRODUCT_URL}/${id}/archive`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    ),
 
-export const deleteItem = (id) =>
-  api(() => {
-    const items = getStorage(MERCHANDISE_KEY) || [];
-    const filtered = items.filter((item) => item.id !== id);
-    setStorage(MERCHANDISE_KEY, filtered);
-    return filtered;
-  });
+  restoreProduct: (id) =>
+    api(() =>
+      secureFetch(`${PRODUCT_URL}/${id}/restore`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    ),
+
+  addProduct: (product, imageFiles) =>
+    api(() => {
+      const formData = new FormData();
+
+      Object.keys(product).forEach((key) => {
+        if (key !== "item_images") {
+          if (key === "item_sizes") {
+            formData.append(key, JSON.stringify(product[key]));
+          } else {
+            formData.append(key, product[key]);
+          }
+        }
+      });
+
+      imageFiles.forEach((file) => {
+        formData.append("item_images", file);
+      });
+
+      return secureFetch(PRODUCT_URL, {
+        method: "POST",
+        credentials: "include",
+        headers: {},
+        body: formData,
+      });
+    }),
+
+  updateProduct: (id, updatedData, imageFiles, existingImages) =>
+    api(() => {
+      const formData = new FormData();
+
+      Object.keys(updatedData).forEach((key) => {
+        if (
+          key !== "item_images" &&
+          key !== "isArchived" &&
+          key !== "archivedAt"
+        ) {
+          if (key === "item_sizes") {
+            formData.append(key, JSON.stringify(updatedData[key]));
+          } else {
+            formData.append(key, updatedData[key]);
+          }
+        }
+      });
+
+      imageFiles.forEach((file) => {
+        formData.append("item_images", file);
+      });
+
+      existingImages.forEach((file) => {
+        formData.append("existing_images", file);
+      });
+
+      return secureFetch(`${PRODUCT_URL}/${id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {},
+        body: formData,
+      });
+    }),
+
+  deleteProduct: (id) =>
+    api(() =>
+      secureFetch(`${PRODUCT_URL}/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {},
+      }),
+    ),
+};
