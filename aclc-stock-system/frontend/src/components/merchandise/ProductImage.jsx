@@ -1,8 +1,8 @@
-const API_BASE_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api"
-).replace(/\/api\/?$/, "");
-
 export function ProductImage({ item }) {
+  const API_BASE_URL = (
+    import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+  ).replace(/\/api\/?$/, "");
+
   return (
     <div className="aspect-square bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center">
       {item?.item_images?.[0] ? (

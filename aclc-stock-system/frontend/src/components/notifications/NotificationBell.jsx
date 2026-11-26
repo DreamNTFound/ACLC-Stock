@@ -5,13 +5,13 @@ export const NotificationBell = ({ profileId }) => {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
   const fetchNotifications = async () => {
     if (!profileId) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/notifications/${profileId}`,
-      );
+      const response = await fetch(`${API_URL}/notifications/${profileId}`);
       //console.log("Fetch notifications response:", response);
 
       if (!response.ok) {
@@ -77,7 +77,7 @@ export const NotificationBell = ({ profileId }) => {
   const markNotificationAsRead = async (notificationId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/notifications/${notificationId}/read`,
+        `${API_URL}/notifications/${notificationId}/read`,
         {
           method: "PUT",
         },
@@ -104,7 +104,7 @@ export const NotificationBell = ({ profileId }) => {
   const deleteNotification = async (notificationId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/notifications/${notificationId}`,
+        `${API_URL}/notifications/${notificationId}`,
         {
           method: "DELETE",
         },
