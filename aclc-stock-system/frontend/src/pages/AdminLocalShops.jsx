@@ -1,23 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  getLocalShop,
-  addLocalShop,
-  updateLocalShop,
-  deleteLocalShop,
-} from "../services/localShopService";
-//import { getItems } from "../services/merchandiseService";
+import { recommendedShopService } from "@/services/localShopService";
 import { categoryOptions } from "../utils/formatHelpers";
-import Modal from "../components/common/Modal";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import { seedLocalShop } from "../services/seedData";
+import Modal from "@/components/common/Modal";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { seedLocalShop } from "@/services/seedData";
 import Skeleton from "@mui/material/Skeleton";
 
 export default function LocalShops() {
   const menuRef = useRef(null);
   const [mode, setMode] = useState("add");
   const [shops, setShops] = useState([]);
-  //const [items, setItems] = useState([]);
   const [isShopModalOpen, setIsShopModalOpen] = useState(false);
   const [isDelShopModalOpen, setIsDelShopModalOpen] = useState(false);
   const [selectedShopId, setSelectedShopId] = useState(null);
@@ -29,13 +22,15 @@ export default function LocalShops() {
     seedLocalShop();
     const fetchShops = async () => {
       try {
-        const response = await getLocalShop();
-        setTimeout(() => {
-          setShops(response);
-          setLoading(false);
-        }, 500);
+        setLoading(true);
+        const response = await recommendedShopService.getRecommendedShop();
+        setShops(response);
       } catch (error) {
         console.error("Error fetching local shops:", error);
+        setShops([]);
+        setLoading(false);
+      } finally {
+        setLoading(false);
       }
     };
     fetchShops();
@@ -52,11 +47,11 @@ export default function LocalShops() {
   }, [menuRef]);
 
   const getInitialShopData = {
-    name: "",
+    shopName: "",
     address: "",
     contact: "",
-    mapLink: "",
     avail_items: [],
+    mapLink: "",
     partner: false,
     active: true,
   };
@@ -66,11 +61,12 @@ export default function LocalShops() {
   const handleAddShop = () => {
     setMode("add");
     setSelectedShopId(null);
+    setShopForm(getInitialShopData);
     setIsShopModalOpen(true);
   };
 
   const handleEditShop = (id) => {
-    const shopToEdit = shops.find((shop) => shop.id === id);
+    const shopToEdit = shops.find((shop) => shop._id === id);
     if (!shopToEdit) return;
     setMode("edit");
     setOpenMenuId(null);
@@ -91,8 +87,8 @@ export default function LocalShops() {
   const confirmDeleteShop = async () => {
     if (!selectedShopId) return;
     try {
-      await deleteLocalShop(selectedShopId);
-      setShops((prev) => prev.filter((shop) => shop.id !== selectedShopId));
+      await recommendedShopService.deleteLocalShop(selectedShopId);
+      setShops((prev) => prev.filter((shop) => shop._id !== selectedShopId));
       setTimeout(() => {
         setIsDelShopModalOpen(false);
         setSelectedShopId(null);
@@ -103,16 +99,21 @@ export default function LocalShops() {
     }
   };
 
-  const saveShop = async (e) => {
+  const saved = async (e) => {
     e.preventDefault();
     try {
       if (mode === "edit") {
-        const updatedShop = await updateLocalShop(selectedShopId, shopForm);
+        const updatedShop = await recommendedShopService.updateLocalShop(
+          selectedShopId,
+          shopForm,
+        );
         setShops((prev) =>
-          prev.map((shop) => (shop.id === selectedShopId ? updatedShop : shop)),
+          prev.map((shop) =>
+            shop._id === selectedShopId ? updatedShop : shop,
+          ),
         );
       } else {
-        const newShop = await addLocalShop(shopForm);
+        const newShop = await recommendedShopService.addLocalShop(shopForm);
         setShops((prev) => [...prev, newShop]);
       }
       setTimeout(() => {
@@ -201,94 +202,121 @@ export default function LocalShops() {
                           </tr>
                         </thead>
                         <tbody className="[&_tr:last-child]:border-0">
-                          {loading
-                            ? Array.from({ length: 8 }).map((_, idx) => (
-                                <tr
-                                  key={idx}
-                                  className="border-b transition-colors animated-pulse"
+                          {loading ? (
+                            Array.from({ length: 8 }).map((_, idx) => (
+                              <tr
+                                key={idx}
+                                className="border-b transition-colors animated-pulse"
+                              >
+                                <td
+                                  colSpan={6}
+                                  className="p-1 align-middle font-medium text-[#1e3a5f]"
                                 >
-                                  <td
-                                    colSpan={6}
-                                    className="p-1 align-middle font-medium text-[#1e3a5f]"
-                                  >
-                                    <Skeleton
-                                      variant="rectangular"
-                                      width="100%"
-                                      height={50}
-                                      className="rounded-md"
-                                    />
-                                  </td>
-                                </tr>
-                              ))
-                            : shops.map((shop) => (
-                                <tr
-                                  key={shop.id}
-                                  className="opacity-0 animate-fadeIn"
-                                >
-                                  <td className="p-2 align-middle">
-                                    {shop.name}
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    {shop.address}
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    {shop.contact}
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    <div className="flex flex-wrap gap-1">
-                                      {getShopItemsPrev(shop).map((item, i) => (
-                                        <div
-                                          key={i}
-                                          className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors border-transparent bg-slate-100 text-secondary-foreground text-[10px]"
-                                        >
-                                          {item}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    {shop.partner && (
-                                      <span className="text-yellow-400 text-xl">
-                                        ★
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="p-2 align-middle">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const rect =
-                                          e.currentTarget.getBoundingClientRect();
-                                        const menuWidth = 128;
-                                        setMenuPosition({
-                                          top: rect.bottom + 6,
-                                          left: rect.right - menuWidth,
-                                        });
-                                        setOpenMenuId((prevId) =>
-                                          prevId === shop.id ? null : shop.id,
-                                        );
-                                      }}
-                                      className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
-                                    >
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.5}
-                                        stroke="currentColor"
-                                        className="size-6 text-slate-500"
+                                  <Skeleton
+                                    variant="rectangular"
+                                    width="100%"
+                                    height={50}
+                                    className="rounded-md"
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : shops.length > 0 ? (
+                            shops.map((shop) => (
+                              <tr
+                                key={shop._id}
+                                className="opacity-0 animate-fadeIn"
+                              >
+                                <td className="p-2 align-middle">
+                                  {shop.shopName}
+                                </td>
+                                <td className="p-2 align-middle">
+                                  {shop.address}
+                                </td>
+                                <td className="p-2 align-middle">
+                                  {shop.contact}
+                                </td>
+                                <td className="p-2 align-middle">
+                                  <div className="flex flex-wrap gap-1">
+                                    {getShopItemsPrev(shop).map((item, i) => (
+                                      <div
+                                        key={i}
+                                        className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors border-transparent bg-slate-100 text-secondary-foreground text-[10px]"
                                       >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
+                                        {item}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="p-2 align-middle">
+                                  {shop.partner && (
+                                    <span className="text-yellow-400 text-xl">
+                                      ★
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="p-2 align-middle">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const rect =
+                                        e.currentTarget.getBoundingClientRect();
+                                      const menuWidth = 128;
+                                      const padding = 8;
+
+                                      let left = rect.right - menuWidth;
+
+                                      if (
+                                        left + menuWidth >
+                                        window.innerWidth
+                                      ) {
+                                        left =
+                                          window.innerWidth -
+                                          menuWidth -
+                                          padding;
+                                      }
+
+                                      if (left < padding) left = padding;
+
+                                      setMenuPosition({
+                                        top: rect.bottom + 6,
+                                        left: rect.right - menuWidth,
+                                      });
+                                      setOpenMenuId((prevId) =>
+                                        prevId === shop._id ? null : shop._id,
+                                      );
+                                    }}
+                                    className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors duration-200 ease-in-out"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={1.5}
+                                      stroke="currentColor"
+                                      className="size-6 text-slate-500"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+                                      />
+                                    </svg>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                className="text-center text-slate-500 py-4"
+                                colSpan={6}
+                              >
+                                No Local Shops Found.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -310,7 +338,7 @@ export default function LocalShops() {
           <div
             ref={menuRef}
             style={{ top: menuPosition.top, left: menuPosition.left }}
-            className="absolute right-10 w-32 rounded-md border border-slate-200 bg-transparent bg-white shadow-lg z-50"
+            className="fixed w-32 rounded-md border border-slate-200 bg-transparent bg-white shadow-lg z-50"
           >
             <button
               onClick={() => handleEditShop(openMenuId)}
@@ -369,9 +397,9 @@ export default function LocalShops() {
                 </label>
                 <input
                   type="text"
-                  value={shopForm.name}
+                  value={shopForm.shopName}
                   onChange={(e) =>
-                    setShopForm({ ...shopForm, name: e.target.value })
+                    setShopForm({ ...shopForm, shopName: e.target.value })
                   }
                   className="inline-flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors md:text-sm"
                 />
@@ -487,13 +515,13 @@ export default function LocalShops() {
                     setIsShopModalOpen(false);
                     resetShopForm();
                   }}
-                  className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 px-4 py-2 rounded-md cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 px-4 py-2 mt-1.5 sm:mt-0 rounded-md cursor-pointer"
                 >
                   <span>Cancel</span>
                 </button>
                 <button
-                  onClick={saveShop}
-                  className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md cursor-pointer"
+                  onClick={saved}
+                  className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 mb-1.5 sm:mb-0 rounded-md cursor-pointer"
                 >
                   <span>Save</span>
                 </button>
