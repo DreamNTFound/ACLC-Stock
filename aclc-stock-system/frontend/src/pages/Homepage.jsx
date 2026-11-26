@@ -22,6 +22,10 @@ export default function Homepage() {
   const [error, setError] = useState(null);
   const [openChatAssistant, setOpenChatAssistant] = useState(false);
 
+  const API_BASE_URL = (
+    import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+  ).replace(/\/api\/?$/, "");
+
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -302,7 +306,7 @@ export default function Homepage() {
                         <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden flex items-center justify-center">
                           {item?.item_images?.[0] ? (
                             <img
-                              src={`http://localhost:5000/uploads/${item?.item_images?.[0]}`}
+                              src={`${API_BASE_URL}/uploads/${item?.item_images?.[0]}`}
                               alt="Preview"
                               className="w-full h-full object-cover group-hover:scale-105 transition duration-50"
                             />

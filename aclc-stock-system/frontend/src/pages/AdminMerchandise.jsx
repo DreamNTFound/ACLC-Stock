@@ -35,6 +35,10 @@ export default function Merchandise() {
 
   const isFiltered = !!filter;
 
+  const API_BASE_URL = (
+    import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+  ).replace(/\/api\/?$/, "");
+
   const Toast = Swal.mixin({
     toast: true,
     position: "top-end",
@@ -112,7 +116,7 @@ export default function Merchandise() {
     });
     setExistingImages(itemToEdit.item_images || []);
     const existingImage = itemToEdit.item_images.map(
-      (img) => `http://localhost:5000/uploads/${img}`,
+      (img) => `${API_BASE_URL}uploads/${img}`,
     );
     setImagePreviews(existingImage);
     setImageFiles([]);
@@ -651,7 +655,7 @@ export default function Merchandise() {
                                     <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                       {item?.item_images?.[0] ? (
                                         <img
-                                          src={`http://localhost:5000/uploads/${item?.item_images?.[0]}`}
+                                          src={`${API_BASE_URL}/uploads/${item?.item_images?.[0]}`}
                                           alt="item"
                                           className="w-full h-full object-cover"
                                           onError={(e) => {
