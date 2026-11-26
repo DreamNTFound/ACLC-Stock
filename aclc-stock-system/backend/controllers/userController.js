@@ -45,15 +45,31 @@ exports.loginUser = async (req, res) => {
       });
     }
 
+    // const user = await User.findOne({ usn: usn.trim() });
+
+    // if (!user) {
+    //   return res
+    //     .status(404)
+    //     .json({ success: false, message: "Invalid username or password" });
+    // }
+
+    // const isMatch = await user.matchPassword(password);
+
     const user = await User.findOne({ usn: usn.trim() });
 
+    console.log("Login database:", mongoose.connection.name);
+    console.log("USN lookup found user:", Boolean(user));
+
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Invalid username or password" });
+      return res.status(404).json({
+        success: false,
+        message: "Invalid username or password",
+      });
     }
 
     const isMatch = await user.matchPassword(password);
+
+    console.log("Password matched:", isMatch);
 
     if (!isMatch) {
       return res
