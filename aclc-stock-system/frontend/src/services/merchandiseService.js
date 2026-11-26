@@ -1,12 +1,12 @@
 import { api } from "./api";
 import { secureFetch } from "./authService";
 
-const PRODUCT_URL = "http://localhost:5000/api/products";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const productService = {
   getAllProduct: () =>
     api(() =>
-      secureFetch(PRODUCT_URL, {
+      secureFetch(API_URL, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -17,7 +17,7 @@ export const productService = {
 
   getAllProductsForAdmin: () =>
     api(() =>
-      secureFetch(`${PRODUCT_URL}/admin/all`, {
+      secureFetch(`${API_URL}/admin/all`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -28,7 +28,7 @@ export const productService = {
 
   archiveProduct: (id) =>
     api(() =>
-      secureFetch(`${PRODUCT_URL}/${id}/archive`, {
+      secureFetch(`${API_URL}/${id}/archive`, {
         method: "PATCH",
         credentials: "include",
         headers: {
@@ -39,7 +39,7 @@ export const productService = {
 
   restoreProduct: (id) =>
     api(() =>
-      secureFetch(`${PRODUCT_URL}/${id}/restore`, {
+      secureFetch(`${API_URL}/${id}/restore`, {
         method: "PATCH",
         credentials: "include",
         headers: {
@@ -66,7 +66,7 @@ export const productService = {
         formData.append("item_images", file);
       });
 
-      return secureFetch(PRODUCT_URL, {
+      return secureFetch(API_URL, {
         method: "POST",
         credentials: "include",
         headers: {},
@@ -100,7 +100,7 @@ export const productService = {
         formData.append("existing_images", file);
       });
 
-      return secureFetch(`${PRODUCT_URL}/${id}`, {
+      return secureFetch(`${API_URL}/${id}`, {
         method: "PUT",
         credentials: "include",
         headers: {},
@@ -110,7 +110,7 @@ export const productService = {
 
   deleteProduct: (id) =>
     api(() =>
-      secureFetch(`${PRODUCT_URL}/${id}`, {
+      secureFetch(`${API_URL}/${id}`, {
         method: "DELETE",
         credentials: "include",
         headers: {},
